@@ -15,6 +15,7 @@ public class VariationResponse {
     private Double discounted;
     private List<String> addons;
     private Boolean isOutOfStock;
+    private Integer prepTime;
 
     public String get_id() { return id; }
 }

@@ -12,6 +12,7 @@ public class VariationInput {
     private Float discounted;
     private List<String> addons;
     private Boolean isOutOfStock;
+    private Integer prepTime;
     public void set_id(String _id){
         this.id = _id;
     }

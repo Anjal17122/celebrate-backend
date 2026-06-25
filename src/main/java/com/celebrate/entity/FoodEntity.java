@@ -7,6 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,6 +32,13 @@ public class FoodEntity {
 
     @Column(length = 500)
     private String image;
+
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "food_images", joinColumns = @JoinColumn(name = "food_id"))
+    @Column(name = "image_url", length = 500)
+    @OrderColumn(name = "image_order")
+    private List<String> images = new ArrayList<>();
 
     @Column(name = "is_active")
     private Boolean isActive;

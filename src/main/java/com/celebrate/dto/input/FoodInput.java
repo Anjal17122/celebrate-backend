@@ -13,6 +13,7 @@ public class FoodInput {
     private String title;
     private String description;
     private String image;
+    private List<String> images;
     private List<VariationInput> variations;
     private Boolean isActive;
     private Boolean isOutOfStock;

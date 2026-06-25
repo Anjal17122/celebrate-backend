@@ -548,6 +548,8 @@ type Item {
   variation: ItemVariation!
   addons: [ItemAddon!]
   specialInstructions: String
+  cakeText: String
+  cakeImageUrl: String
   isActive: Boolean!
   createdAt: String!
   updatedAt: String!
@@ -758,6 +760,7 @@ type Variation {
   discounted: Float
   addons: [String!]
   isOutOfStock: Boolean
+  prepTime: Int
 }
 
 type CartVariation {
@@ -789,6 +792,7 @@ type Food {
   description: String!
   variations: [Variation!]!
   image: String
+  images: [String]
   subCategory: String
   isActive: Boolean!
   createdAt: String!
@@ -1630,6 +1634,8 @@ input OrderInput {
   variation: String!
   addons: [AddonsInput!]
   specialInstructions: String
+  cakeText: String
+  cakeImageUrl: String
 }
 
 input VariationInput {
@@ -1639,6 +1645,7 @@ input VariationInput {
   discounted: Float
   addons: [String!]
   isOutOfStock: Boolean
+  prepTime: Int
 }
 
 input FoodInput {
@@ -1649,6 +1656,7 @@ input FoodInput {
   title: String!
   description: String
   image: String
+  images: [String]
   variations: [VariationInput!]!
   isActive: Boolean
   isOutOfStock: Boolean

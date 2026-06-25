@@ -318,6 +318,8 @@ public class OrderService {
                     .image(food.getImage())
                     .quantity(item.getQuantity())
                     .specialInstructions(item.getSpecialInstructions())
+                    .cakeText(item.getCakeText())
+                    .cakeImageUrl(item.getCakeImageUrl())
                     .isActive(true)
                     .variation(itemVariation)
                     .build();

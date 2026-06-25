@@ -11,4 +11,6 @@ public class OrderInput {
     private String variation;
     private List<AddonsInput> addons;
     private String specialInstructions;
+    private String cakeText;
+    private String cakeImageUrl;
 }

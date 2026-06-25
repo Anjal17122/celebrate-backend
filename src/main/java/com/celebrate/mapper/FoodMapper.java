@@ -13,6 +13,7 @@ public interface FoodMapper {
     @Mapping(source = "subCategory.id", target = "subCategory")
     @Mapping(source = "createdAt", target = "createdAt", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
     @Mapping(source = "updatedAt", target = "updatedAt", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
+    @Mapping(source = "images", target = "images") // Explicitly map the list
     FoodResponse toResponse(FoodEntity entity);
 
     List<FoodResponse> toResponseList(List<FoodEntity> entities);

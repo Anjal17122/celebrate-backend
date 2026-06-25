@@ -14,6 +14,7 @@ public class FoodResponse {
     private String description;
     private List<VariationResponse> variations;
     private String image;
+    private List<String> images;
     private String subCategory;
     private Boolean isActive;
     private String createdAt;

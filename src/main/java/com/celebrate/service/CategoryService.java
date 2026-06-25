@@ -201,6 +201,7 @@ public class CategoryService {
                 .title(input.getTitle())
                 .description(input.getDescription())
                 .image(input.getImage())
+                .images(input.getImages() != null ? new ArrayList<>(input.getImages()) : new ArrayList<>())
                 .category(category)
                 .subCategory(subCategory)
                 .isActive(input.getIsActive() != null ? input.getIsActive() : true)
@@ -216,6 +217,7 @@ public class CategoryService {
                         .price(vi.getPrice().doubleValue())
                         .discounted(vi.getDiscounted() != null ? vi.getDiscounted().doubleValue() : 0.0)
                         .isOutOfStock(vi.getIsOutOfStock() != null ? vi.getIsOutOfStock() : false)
+                        .prepTime(vi.getPrepTime())
                         .food(savedFood)
                         .addonIds(vi.getAddons())
                         .build();
@@ -236,6 +238,10 @@ public class CategoryService {
         if (input.getTitle() != null) food.setTitle(input.getTitle());
         if (input.getDescription() != null) food.setDescription(input.getDescription());
         if (input.getImage() != null) food.setImage(input.getImage());
+        if (input.getImages() != null) {
+            food.getImages().clear();
+            food.getImages().addAll(input.getImages());
+        }
         if (input.getIsActive() != null) food.setIsActive(input.getIsActive());
         if (input.getIsOutOfStock() != null) food.setIsOutOfStock(input.getIsOutOfStock());
 
@@ -252,6 +258,7 @@ public class CategoryService {
                         .price(vi.getPrice().doubleValue())
                         .discounted(vi.getDiscounted() != null ? vi.getDiscounted().doubleValue() : 0.0)
                         .isOutOfStock(vi.getIsOutOfStock() != null ? vi.getIsOutOfStock() : false)
+                        .prepTime(vi.getPrepTime())
                         .food(food)
                         .addonIds(vi.getAddons())
                         .build();

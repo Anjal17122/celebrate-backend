@@ -59,7 +59,9 @@ public class SubscriptionPublisher {
     }
 
     public Flux<OrderResponse> getOrderUpdateFlux() {
-        return orderUpdateSink.asFlux();
+        return orderUpdateSink.asFlux()
+                .doOnNext(order -> System.out.println("DEBUG: Received order update: " + order.toString()))
+                .doOnError(error -> System.err.println("DEBUG: Error in stream: " + error.getMessage()));
     }
 
     public Flux<RiderResponse> getRiderLocationFlux() {

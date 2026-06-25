@@ -48,6 +48,12 @@ public class OrderItemEntity {
     @Column(name = "special_instructions", columnDefinition = "TEXT")
     private String specialInstructions;
 
+    @Column(name = "cake_text", columnDefinition = "TEXT")
+    private String cakeText;
+
+    @Column(name = "cake_image_url", length = 500)
+    private String cakeImageUrl;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 

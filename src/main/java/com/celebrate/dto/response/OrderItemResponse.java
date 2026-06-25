@@ -18,6 +18,8 @@ public class OrderItemResponse {
     private ItemVariationResponse variation;
     private List<ItemAddonResponse> addons;
     private String specialInstructions;
+    private String cakeText;
+    private String cakeImageUrl;
     private Boolean isActive;
     private String createdAt;
     private String updatedAt;

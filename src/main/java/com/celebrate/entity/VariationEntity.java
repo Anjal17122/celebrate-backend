@@ -31,6 +31,9 @@ public class VariationEntity {
     @Column(name = "is_out_of_stock")
     private Boolean isOutOfStock;
 
+    @Column(name = "prep_time")
+    private Integer prepTime;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_id", nullable = false)
     private FoodEntity food;
