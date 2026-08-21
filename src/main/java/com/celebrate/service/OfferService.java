@@ -30,7 +30,7 @@ public class OfferService {
 
     @Transactional
     public OfferResponse createOffer(OfferInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         List<RestaurantEntity> restaurants = new ArrayList<>();
         if (input.getRestaurants() != null) {
             for (String rId : input.getRestaurants()) {
@@ -47,7 +47,7 @@ public class OfferService {
 
     @Transactional
     public OfferResponse editOffer(OfferInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         OfferEntity offer = offerRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Offer", input.getId()));
         if (input.getName() != null) offer.setName(input.getName());
@@ -64,7 +64,7 @@ public class OfferService {
 
     @Transactional
     public boolean deleteOffer(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         OfferEntity offer = offerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Offer", id));
         offerRepository.delete(offer);
@@ -73,7 +73,7 @@ public class OfferService {
 
     @Transactional
     public OfferResponse addRestaurantToOffer(String offerId, String restaurantId) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         OfferEntity offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new NotFoundException("Offer", offerId));
         RestaurantEntity restaurant = restaurantRepository.findById(restaurantId)

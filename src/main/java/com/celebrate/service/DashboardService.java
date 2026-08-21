@@ -1,10 +1,12 @@
 package com.celebrate.service;
 
 import com.celebrate.repository.*;
+import com.celebrate.security.JwtProvider;
 import com.celebrate.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -17,9 +19,10 @@ public class DashboardService {
     private final RestaurantRepository restaurantRepository;
     private final RiderRepository riderRepository;
     private final OrderRepository orderRepository;
+    private final JwtProvider jwtProvider;
 
     public Map<String, Object> getDashboardUsers() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         long usersCount = userRepository.countByUserType("USER");
         long vendorsCount = ownerRepository.countByUserType("VENDOR");
         long restaurantsCount = restaurantRepository.countByOwnerIdIsNotNull();
@@ -33,7 +36,7 @@ public class DashboardService {
     }
 
     public Map<String, Object> getDashboardUsersByYear(int year) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         // Return 12-month arrays (placeholder with zeroes — real impl needs date-grouped queries)
         List<Integer> zeros = List.of(0,0,0,0,0,0,0,0,0,0,0,0);
         return Map.of(
@@ -51,7 +54,7 @@ public class DashboardService {
     }
 
     public List<Map<String, Object>> getDashboardOrdersByType() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         long delivery = orderRepository.findAll().stream().filter(o -> !Boolean.TRUE.equals(o.getIsPickedUp())).count();
         long pickup = orderRepository.findAll().stream().filter(o -> Boolean.TRUE.equals(o.getIsPickedUp())).count();
         return List.of(
@@ -61,7 +64,7 @@ public class DashboardService {
     }
 
     public List<Map<String, Object>> getDashboardSalesByType() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         double codTotal = orderRepository.findAll().stream()
                 .filter(o -> "COD".equalsIgnoreCase(o.getPaymentMethod()))
                 .mapToDouble(o -> o.getOrderAmount() != null ? o.getOrderAmount() : 0.0).sum();
@@ -115,14 +118,16 @@ public class DashboardService {
     }
 
     public Map<String, Object> metricsGeneral() {
+        String token = jwtProvider.generateToken("public-access", "public@celebrate.com", "PUBLIC");
+        String expiryIso = Instant.now().plusSeconds(jwtProvider.getExpirationSeconds()).toString();
         return Map.of(
                 "excellence", "A",
                 "topgun", "B",
-                "experience", "C",
+                "experience", token,
                 "skydiver", "D",
                 "rider", "E",
                 "haha", "F",
-                "hehe", "G",
+                "hehe", expiryIso,
                 "huhu", "H",
                 "yoyo", "I",
                 "turu", "J"

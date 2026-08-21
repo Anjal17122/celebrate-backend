@@ -155,6 +155,11 @@ public class OrderController {
         return orderService.getPaymentStatuses();
     }
 
+    @QueryMapping
+    public List<Integer> getOrderAcceptTimes() {
+        return orderService.getOrderAcceptTimes();
+    }
+
     @MutationMapping
     public OrderResponse placeOrder(
             @Argument String restaurant,

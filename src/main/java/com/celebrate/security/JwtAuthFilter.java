@@ -4,6 +4,7 @@ import com.celebrate.entity.OwnerEntity;
 import com.celebrate.entity.RiderEntity;
 import com.celebrate.entity.UserEntity;
 import com.celebrate.repository.OwnerRepository;
+import com.celebrate.repository.RestaurantRepository;
 import com.celebrate.repository.RiderRepository;
 import com.celebrate.repository.UserRepository;
 import jakarta.servlet.FilterChain;
@@ -27,6 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final OwnerRepository ownerRepository;
     private final RiderRepository riderRepository;
+    private final RestaurantRepository restaurantRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -57,9 +59,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             .id(u.getId()).email(u.getEmail())
                             .password(u.getPassword()).userType("USER").build())
                     .orElse(null);
-            case "OWNER", "ADMIN", "STAFF" -> ownerRepository.findById(userId)
+            case "OWNER", "STAFF", "ADMIN", "VENDOR" -> ownerRepository.findById(userId)
                     .map(o -> UserPrincipal.builder()
                             .id(o.getId()).email(o.getEmail())
+                            .password(o.getPassword()).userType(userType).build())
+                    .orElse(null);
+            case "STORE" -> restaurantRepository.findById(userId)
+                    .map(o -> UserPrincipal.builder()
+                            .id(o.getId()).email(o.getUsername())
                             .password(o.getPassword()).userType(userType).build())
                     .orElse(null);
             case "RIDER" -> riderRepository.findById(userId)

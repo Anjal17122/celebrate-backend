@@ -54,7 +54,7 @@ public class NotificationService {
     }
 
     public String sendNotificationUser(String notificationTitle, String notificationBody) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         // TODO: integrate with Firebase FCM or similar push notification service
         NotificationEntity notification = NotificationEntity.builder()
                 .title(notificationTitle)

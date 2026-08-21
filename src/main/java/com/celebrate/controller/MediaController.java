@@ -9,7 +9,9 @@ import com.celebrate.dto.response.DeleteResultResponse;
 import com.celebrate.dto.response.FormSubmissionResponse;
 import com.celebrate.dto.response.LiveActivityResponse;
 import com.celebrate.dto.response.UploadResultResponse;
+import com.celebrate.service.S3Service;
 import com.celebrate.service.SubscriptionPublisher;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -22,16 +24,20 @@ import java.time.Instant;
 public class MediaController {
 
     private final SubscriptionPublisher subscriptionPublisher;
+    private final S3Service s3Service;
+    private final ImageUrlHelper imageUrlHelper;
 
     @MutationMapping
     public UploadResultResponse uploadImageToS3(@Argument String image) {
+        String relativePath = s3Service.uploadBase64Image(image, "general");
         UploadResultResponse response = new UploadResultResponse();
-        response.setImageUrl("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLeNSg0Lkbw8fX8ifI_IYTCf73bTCG0QCQcA&s");
+        response.setImageUrl(imageUrlHelper.resolve(relativePath));
         return response;
     }
 
     @MutationMapping
     public DeleteResultResponse deleteImageFromS3(@Argument String imageUrl) {
+        s3Service.deleteByRelativePath(imageUrlHelper.toRelativePath(imageUrl));
         DeleteResultResponse response = new DeleteResultResponse();
         response.setSuccess(true);
         response.setMessage("Image deleted successfully.");

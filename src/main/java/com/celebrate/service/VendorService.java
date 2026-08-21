@@ -14,6 +14,7 @@ import com.celebrate.mapper.StaffMapper;
 import com.celebrate.repository.*;
 import com.celebrate.security.JwtProvider;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,9 +34,10 @@ public class VendorService {
     private final StaffMapper staffMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final ImageUrlHelper imageUrlHelper;
 
     public List<OwnerResponse> getVendors() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         return ownerRepository.findAll().stream()
                 .filter(o -> "VENDOR".equals(o.getUserType()))
                 .map(ownerMapper::toResponse)
@@ -43,7 +45,7 @@ public class VendorService {
     }
 
     public OwnerResponse getVendor(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "VENDOR");
         OwnerEntity owner = ownerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Vendor", id));
         return ownerMapper.toResponse(owner);
@@ -58,7 +60,7 @@ public class VendorService {
 
     @Transactional
     public OwnerResponse createVendor(VendorInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         if (input.getEmail() != null && ownerRepository.existsByEmail(input.getEmail())) {
             throw new ConflictException("A vendor with this email already exists.");
         }
@@ -68,7 +70,7 @@ public class VendorService {
                 .uniqueId(uniqueId)
                 .email(input.getEmail())
                 .name(input.getName())
-                .image(input.getImage())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
                 .phoneNumber(input.getPhoneNumber())
                 .firstName(input.getFirstName())
                 .lastName(input.getLastName())
@@ -89,7 +91,7 @@ public class VendorService {
 
         if (input.getEmail() != null) owner.setEmail(input.getEmail());
         if (input.getName() != null) owner.setName(input.getName());
-        if (input.getImage() != null) owner.setImage(input.getImage());
+        if (input.getImage() != null) owner.setImage(imageUrlHelper.toRelativePath(input.getImage()));
         if (input.getPhoneNumber() != null) owner.setPhoneNumber(input.getPhoneNumber());
         if (input.getFirstName() != null) owner.setFirstName(input.getFirstName());
         if (input.getLastName() != null) owner.setLastName(input.getLastName());
@@ -103,7 +105,7 @@ public class VendorService {
 
     @Transactional
     public boolean deleteVendor(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         OwnerEntity owner = ownerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Vendor", id));
         ownerRepository.delete(owner);
@@ -120,19 +122,19 @@ public class VendorService {
 
     // Staff management
     public List<StaffResponse> getStaffs() {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "STAFF");
         return staffRepository.findAll().stream().map(staffMapper::toResponse).toList();
     }
 
     public StaffResponse getStaff(String id) {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "STAFF");
         return staffMapper.toResponse(staffRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Staff", id)));
     }
 
     @Transactional
     public StaffResponse createStaff(StaffInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         if (input.getEmail() != null && staffRepository.existsByEmail(input.getEmail())) {
             throw new ConflictException("A staff member with this email already exists.");
         }
@@ -171,7 +173,7 @@ public class VendorService {
 
     @Transactional
     public StaffResponse deleteStaff(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         StaffEntity staff = staffRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Staff", id));
         staffRepository.delete(staff);

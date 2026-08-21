@@ -153,7 +153,7 @@ public class EarningsService {
     }
 
     public Map<String, Object> getAllWithdrawRequests(Integer offset) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         List<WithdrawRequestEntity> all = withdrawRequestRepository.findAll(Sort.by("createdAt").descending());
         return Map.of(
                 "success", true,
@@ -164,7 +164,7 @@ public class EarningsService {
 
     @Transactional
     public Map<String, Object> updateWithdrawRequestStatus(String id, String status) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         WithdrawRequestEntity request = withdrawRequestRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("WithdrawRequest", id));
         request.setStatus(status);

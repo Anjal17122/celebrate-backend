@@ -2,11 +2,15 @@ package com.celebrate.service;
 
 import com.celebrate.dto.input.*;
 import com.celebrate.dto.response.*;
+import com.celebrate.dto.response.CategoryWithFoodsResponse;
+import com.celebrate.dto.response.FoodWithRestaurantResponse;
+import com.celebrate.dto.response.RestaurantBasicResponse;
 import com.celebrate.entity.*;
 import com.celebrate.exception.*;
 import com.celebrate.mapper.*;
 import com.celebrate.repository.*;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +31,72 @@ public class CategoryService {
     private final AddonRepository addonRepository;
     private final RestaurantMapper restaurantMapper;
     private final FoodMapper foodMapper;
+    private final ImageUrlHelper imageUrlHelper;
+
+    public List<CategoryWithFoodsResponse> getAllCategoriesNearBy(Float latitude, Float longitude) {
+        List<CategoryEntity> allCategories = categoryRepository.findAll();
+        Map<String, CategoryWithFoodsResponse> categoryMap = new LinkedHashMap<>();
+
+        for (CategoryEntity category : allCategories) {
+            String key = category.getTitle().toLowerCase().trim();
+            RestaurantEntity restaurant = category.getRestaurant();
+
+            CategoryWithFoodsResponse catResponse = categoryMap.computeIfAbsent(key, k -> CategoryWithFoodsResponse.builder()
+                    .id(category.getId())
+                    .title(category.getTitle())
+                    .image(category.getFoods() != null && !category.getFoods().isEmpty() ? imageUrlHelper.resolve(category.getFoods().getFirst().getImage()) : null)
+                    .foods(new ArrayList<>())
+                    .build());
+
+            RestaurantBasicResponse restaurantBasic = RestaurantBasicResponse.builder()
+                    .id(restaurant.getId())
+                    .name(restaurant.getName())
+                    .image(imageUrlHelper.resolve(restaurant.getImage()))
+                    .slug(restaurant.getSlug())
+                    .build();
+
+            if (category.getFoods() == null) continue;
+
+            for (FoodEntity food : category.getFoods()) {
+                if (catResponse.getImage() == null && food.getImage() != null) {
+                    catResponse.setImage(imageUrlHelper.resolve(food.getImage()));
+                }
+
+                List<VariationResponse> variations = food.getVariations() != null
+                        ? food.getVariations().stream()
+                        .map(v -> VariationResponse.builder()
+                                .id(v.getId())
+                                .title(v.getTitle())
+                                .price(v.getPrice())
+                                .discounted(v.getDiscounted())
+                                .isOutOfStock(v.getIsOutOfStock())
+                                .build())
+                        .toList()
+                        : List.of();
+
+                catResponse.getFoods().add(FoodWithRestaurantResponse.builder()
+                        .id(food.getId())
+                        .title(food.getTitle())
+                        .description(food.getDescription())
+                        .image(imageUrlHelper.resolve(food.getImage()))
+                        .isActive(food.getIsActive())
+                        .isOutOfStock(food.getIsOutOfStock())
+                        .subCategory(food.getSubCategory() != null ? food.getSubCategory().getId() : null)
+                        .subCategoryTitle(food.getSubCategory() != null ? food.getSubCategory().getTitle() : null)
+                        .variations(variations)
+                        .restaurant(restaurantBasic)
+                        .build());
+            }
+        }
+        return new ArrayList<>(categoryMap.values());
+    }
 
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(c -> CategoryResponse.builder()
                         .id(c.getId())
                         .title(c.getTitle())
-                        .image(c.getImage())
+                        .image(imageUrlHelper.resolve(c.getImage()))
                         .build())
                 .toList();
     }
@@ -75,7 +138,7 @@ public class CategoryService {
 
         CategoryEntity category = CategoryEntity.builder()
                 .title(input.getTitle())
-                .image(input.getImage())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
                 .restaurant(restaurant)
                 .build();
 
@@ -104,7 +167,7 @@ public class CategoryService {
                 .orElseThrow(() -> new NotFoundException("Restaurant", input.getRestaurant()));
 
         category.setTitle(input.getTitle());
-        if (input.getImage() != null) category.setImage(input.getImage());
+        if (input.getImage() != null) category.setImage(imageUrlHelper.toRelativePath(input.getImage()));
         categoryRepository.save(category);
 
         return restaurantMapper.toResponse(restaurantRepository.findById(restaurant.getId()).orElseThrow());
@@ -200,8 +263,10 @@ public class CategoryService {
         FoodEntity food = FoodEntity.builder()
                 .title(input.getTitle())
                 .description(input.getDescription())
-                .image(input.getImage())
-                .images(input.getImages() != null ? new ArrayList<>(input.getImages()) : new ArrayList<>())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
+                .images(input.getImages() != null
+                        ? input.getImages().stream().map(imageUrlHelper::toRelativePath).collect(Collectors.toCollection(ArrayList::new))
+                        : new ArrayList<>())
                 .category(category)
                 .subCategory(subCategory)
                 .isActive(input.getIsActive() != null ? input.getIsActive() : true)
@@ -237,10 +302,10 @@ public class CategoryService {
 
         if (input.getTitle() != null) food.setTitle(input.getTitle());
         if (input.getDescription() != null) food.setDescription(input.getDescription());
-        if (input.getImage() != null) food.setImage(input.getImage());
+        if (input.getImage() != null) food.setImage(imageUrlHelper.toRelativePath(input.getImage()));
         if (input.getImages() != null) {
             food.getImages().clear();
-            food.getImages().addAll(input.getImages());
+            food.getImages().addAll(input.getImages().stream().map(imageUrlHelper::toRelativePath).toList());
         }
         if (input.getIsActive() != null) food.setIsActive(input.getIsActive());
         if (input.getIsOutOfStock() != null) food.setIsOutOfStock(input.getIsOutOfStock());
@@ -252,6 +317,7 @@ public class CategoryService {
 
         if (input.getVariations() != null) {
             variationRepository.deleteByFoodId(food.getId());
+            variationRepository.flush();
             for (VariationInput vi : input.getVariations()) {
                 VariationEntity variation = VariationEntity.builder()
                         .title(vi.getTitle())
@@ -473,7 +539,7 @@ public class CategoryService {
                     .id(food.getId())
                     .title(food.getTitle())
                     .description(food.getDescription())
-                    .image(food.getImage())
+                    .image(imageUrlHelper.resolve(food.getImage()))
                     .isActive(food.getIsActive())
                     .variation(varResponse)
                     .createdAt(food.getCreatedAt() != null ? food.getCreatedAt().toString() : "")

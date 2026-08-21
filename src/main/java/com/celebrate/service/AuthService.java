@@ -6,6 +6,7 @@ import com.celebrate.entity.*;
 import com.celebrate.exception.*;
 import com.celebrate.repository.*;
 import com.celebrate.security.JwtProvider;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class AuthService {
     private final OtpRepository otpRepository;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final ImageUrlHelper imageUrlHelper;
 
     @Transactional
     public AuthDataResponse login(String appleId, String email, String password,
@@ -36,6 +38,7 @@ public class AuthService {
         return switch (type) {
             case "default" -> loginWithEmailPassword(email, password, notificationToken);
             case "apple" -> loginWithApple(appleId, email, name, notificationToken);
+            case "google" -> loginWithGoogle(email, name, notificationToken);
             case "social" -> loginWithSocial(email, name, notificationToken, false);
             default -> throw new BadRequestException("Unknown login type: " + type);
         };
@@ -99,6 +102,42 @@ public class AuthService {
         String token = jwtProvider.generateToken(user.getId(), user.getEmail(), "USER");
         return buildAuthDataResponse(user, token, isNewUser);
     }
+
+    private AuthDataResponse loginWithGoogle(String email, String name, String notificationToken) {
+        if (email == null) throw new BadRequestException("Email is required.");
+
+        UserEntity user = userRepository.findByEmail(email).orElse(null);
+        if (user!=null){
+            if (!user.getIsActive()){
+                throw new BadRequestException("You have been deactivated");
+            }
+        }
+        boolean isNewUser = false;
+
+        if (user == null) {
+                user = UserEntity.builder()
+                        .name(name != null ? name : "Guest User")
+                        .email(user.getEmail())
+                        .appleId(null)
+                        .userType("google")
+                        .isActive(true)
+                        .emailIsVerified(true)
+                        .phoneIsVerified(false)
+                        .isOrderNotification(true)
+                        .isOfferNotification(true)
+                        .notificationToken(notificationToken)
+                        .build();
+                isNewUser = true;
+        }
+
+        user.setLastLogin(LocalDateTime.now());
+        if (notificationToken != null) user.setNotificationToken(notificationToken);
+        userRepository.save(user);
+
+        String token = jwtProvider.generateToken(user.getId(), user.getEmail(), "USER");
+        return buildAuthDataResponse(user, token, isNewUser);
+    }
+
 
     private AuthDataResponse loginWithSocial(String email, String name, String notificationToken, boolean isNewUser) {
         UserEntity user = userRepository.findByEmail(email).orElse(null);
@@ -222,7 +261,7 @@ public class AuthService {
                 .map(r -> RestaurantResponse.builder()
                         .id(r.getId())
                         .name(r.getName())
-                        .image(r.getImage())
+                        .image(imageUrlHelper.resolve(r.getImage()))
                         .build())
                 .toList();
 
@@ -235,7 +274,7 @@ public class AuthService {
                 .restaurants(restaurantResponses)
                 .permissions(List.of())
                 .pushToken(owner.getPushToken())
-                .image(owner.getImage())
+                .image(imageUrlHelper.resolve(owner.getImage()))
                 .name(owner.getName())
                 .build();
     }
@@ -260,7 +299,7 @@ public class AuthService {
                 .restaurants(List.of())
                 .permissions(List.of())
                 .pushToken(admin.getPushToken())
-                .image(admin.getImage())
+                .image(imageUrlHelper.resolve(admin.getImage()))
                 .name(admin.getName())
                 .build();
     }
@@ -309,8 +348,8 @@ public class AuthService {
             restaurantRepository.save(restaurant);
         }
 
-        String token = jwtProvider.generateToken(restaurant.getOwner() != null ? restaurant.getOwner().getId() : restaurant.getId(),
-                username, "OWNER");
+        String token = jwtProvider.generateToken(restaurant.getId(),
+                username, "STORE");
 
         return RestaurantAuthResponse.builder()
                 .token(token)

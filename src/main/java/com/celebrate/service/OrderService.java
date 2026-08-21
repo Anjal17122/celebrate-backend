@@ -7,6 +7,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.OrderMapper;
 import com.celebrate.repository.*;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,7 @@ public class OrderService {
     private final CouponRepository couponRepository;
     private final OrderMapper orderMapper;
     private final SubscriptionPublisher subscriptionPublisher;
+    private final ImageUrlHelper imageUrlHelper;
 
     public OrderResponse getOrder(String id) {
         return orderMapper.toResponse(orderRepository.findById(id)
@@ -108,14 +110,20 @@ public class OrderService {
         Page<OrderEntity> result = orderRepository.findAllPaginated(
                 orderStatus, search, PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending()));
 
-        return Map.of(
-                "orders", result.getContent().stream().map(orderMapper::toResponse).toList(),
-                "totalCount", result.getTotalElements(),
-                "totalPages", result.getTotalPages(),
-                "currentPage", pageNum + 1,
-                "prevPage", pageNum > 0 ? pageNum : null,
-                "nextPage", result.hasNext() ? pageNum + 2 : null
-        );
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("orders",
+                result.getContent().stream()
+                        .map(orderMapper::toResponse)
+                        .toList());
+
+        response.put("totalCount", result.getTotalElements());
+        response.put("totalPages", result.getTotalPages());
+        response.put("currentPage", pageNum + 1);
+        response.put("prevPage", pageNum > 0 ? pageNum : null);
+        response.put("nextPage", result.hasNext() ? pageNum + 2 : null);
+
+        return response;
     }
 
     public Map<String, Object> getOrdersByRestId(String restaurantId, Integer page, Integer rows, String search) {
@@ -153,9 +161,9 @@ public class OrderService {
 
     public List<OrderResponse> getRestaurantOrders() {
         String ownerId = SecurityUtil.getCurrentUserId();
-        List<RestaurantEntity> restaurants = restaurantRepository.findByOwnerId(ownerId);
-        if (restaurants.isEmpty()) return List.of();
-        return orderRepository.findByRestaurantId(restaurants.get(0).getId())
+//        RestaurantEntity restaurants = restaurantRepository.findById(ownerId).orElse(null);
+//        if (restaurants.isEmpty()) return List.of();
+        return orderRepository.findByRestaurantId(ownerId)
                 .stream().map(orderMapper::toResponse).toList();
     }
 
@@ -177,7 +185,7 @@ public class OrderService {
 
     public List<OrderResponse> getRiderOrders() {
         String riderId = SecurityUtil.getCurrentUserId();
-        return orderRepository.findByRiderId(riderId).stream().map(orderMapper::toResponse).toList();
+        return orderRepository.findAll().stream().map(orderMapper::toResponse).toList();
     }
 
     public List<OrderResponse> getUnassignedOrdersByZone() {
@@ -227,6 +235,10 @@ public class OrderService {
 
     public List<String> getPaymentStatuses() {
         return List.of("PENDING", "COMPLETED", "FAILED", "REFUNDED");
+    }
+
+    public List<Integer> getOrderAcceptTimes() {
+        return List.of(10, 20, 30, 40, 50, 60, 70, 80, 90);
     }
 
     @Transactional
@@ -319,7 +331,7 @@ public class OrderService {
                     .quantity(item.getQuantity())
                     .specialInstructions(item.getSpecialInstructions())
                     .cakeText(item.getCakeText())
-                    .cakeImageUrl(item.getCakeImageUrl())
+                    .cakeImageUrl(imageUrlHelper.toRelativePath(item.getCakeImageUrl()))
                     .isActive(true)
                     .variation(itemVariation)
                     .build();
@@ -404,7 +416,13 @@ public class OrderService {
                 .orElseThrow(() -> new NotFoundException("Order", id));
         order.setOrderStatus("ACCEPTED");
         order.setAcceptedAt(LocalDateTime.now().toString());
-        if (time != null) order.setPreparationTime(time);
+        if (time != null) {
+            int minutes = Integer.parseInt(time);
+
+            LocalDateTime preparationTime = LocalDateTime.now().plusMinutes(minutes);
+
+            order.setPreparationTime(preparationTime.toString());
+        }
         return publishStatusEvent(orderRepository.save(order), "status");
     }
 
@@ -504,12 +522,31 @@ public class OrderService {
         } else {
             // Find first unassigned order in rider's zone
             order = orderRepository.findByZoneId(rider.getZone().getId()).stream()
-                    .filter(o -> o.getRider() == null && "PENDING".equals(o.getOrderStatus()))
+                    .filter(o -> o.getRider() == null && "ACCEPTED".equals(o.getOrderStatus()))
                     .findFirst()
                     .orElseThrow(() -> new NotFoundException("No available orders in your zone."));
         }
         order.setRider(rider);
-        order.setAssignedAt(LocalDateTime.now().toString());
+        switch (order.getOrderStatus()) {
+            case "ACCEPTED":
+                order.setOrderStatus("ASSIGNED");
+                order.setAssignedAt(LocalDateTime.now().toString());
+                break;
+
+            case "ASSIGNED":
+                order.setOrderStatus("PICKED");
+                order.setPickedAt(LocalDateTime.now().toString());
+                break;
+
+            case "PICKED":
+                order.setOrderStatus("DELIVERED");
+                order.setDeliveredAt(LocalDateTime.now().toString());
+                break;
+
+            default:
+                break;
+        }
+
         return orderMapper.toResponse(orderRepository.save(order));
     }
 

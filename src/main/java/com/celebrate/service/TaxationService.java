@@ -28,7 +28,7 @@ public class TaxationService {
 
     @Transactional
     public TaxationResponse createTaxation(TaxationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         TaxationEntity taxation = taxationRepository.findFirstBy()
                 .orElse(TaxationEntity.builder().enabled(false).build());
 

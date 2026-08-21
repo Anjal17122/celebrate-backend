@@ -7,6 +7,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.RestaurantMapper;
 import com.celebrate.repository.*;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class RestaurantService {
     private final ReviewRepository reviewRepository;
     private final RestaurantMapper restaurantMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ImageUrlHelper imageUrlHelper;
     private final ObjectMapper objectMapper;
     private final CategoryRepository categoryRepository;
     private final OfferRepository offerRepository;
@@ -74,7 +76,7 @@ public class RestaurantService {
     }
 
     public Map<String, Object> getClonedRestaurantsPaginated(Integer page, Integer limit, String search) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         int pageNum = page != null ? Math.max(0, page - 1) : 0;
         int pageSize = limit != null ? limit : 10;
         Page<RestaurantEntity> result = restaurantRepository.findClonedWithSearch(search, PageRequest.of(pageNum, pageSize));
@@ -87,12 +89,12 @@ public class RestaurantService {
     }
 
     public List<RestaurantResponse> getClonedRestaurants() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         return restaurantRepository.findByIsClonedTrue().stream().map(restaurantMapper::toResponse).toList();
     }
 
     public Map<String, Object> getCommissionRate(Integer page, Integer limit) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         int pageNum = page != null ? Math.max(0, page - 1) : 0;
         int pageSize = limit != null ? limit : 10;
         Page<RestaurantEntity> result = restaurantRepository.findAll(PageRequest.of(pageNum, pageSize));
@@ -120,7 +122,7 @@ public class RestaurantService {
 
     @Transactional
     public RestaurantResponse createRestaurant(RestaurantInput input, String ownerId) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR","VENDOR");
         OwnerEntity owner = ownerRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Owner", ownerId));
 
@@ -130,8 +132,8 @@ public class RestaurantService {
                 .name(input.getName())
                 .username(input.getUsername())
                 .password(input.getPassword() != null ? passwordEncoder.encode(input.getPassword()) : null)
-                .image(input.getImage())
-                .logo(input.getLogo())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
+                .logo(imageUrlHelper.toRelativePath(input.getLogo()))
                 .address(input.getAddress())
                 .deliveryTime(input.getDeliveryTime())
                 .minimumOrder(input.getMinimumOrder())
@@ -162,8 +164,8 @@ public class RestaurantService {
                 .orElseThrow(() -> new NotFoundException("Restaurant", restaurantId));
 
         if (input.getName() != null) restaurant.setName(input.getName());
-        if (input.getImage() != null) restaurant.setImage(input.getImage());
-        if (input.getLogo() != null) restaurant.setLogo(input.getLogo());
+        if (input.getImage() != null) restaurant.setImage(imageUrlHelper.toRelativePath(input.getImage()));
+        if (input.getLogo() != null) restaurant.setLogo(imageUrlHelper.toRelativePath(input.getLogo()));
         if (input.getAddress() != null) restaurant.setAddress(input.getAddress());
         if (input.getOrderPrefix() != null) restaurant.setOrderPrefix(input.getOrderPrefix());
         if (input.getUsername() != null) restaurant.setUsername(input.getUsername());
@@ -188,7 +190,7 @@ public class RestaurantService {
 
     @Transactional
     public RestaurantResponse deleteRestaurant(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         RestaurantEntity restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Restaurant", id));
         restaurant.setIsActive(false);
@@ -197,7 +199,7 @@ public class RestaurantService {
 
     @Transactional
     public boolean hardDeleteRestaurant(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         RestaurantEntity restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Restaurant", id));
         restaurantRepository.delete(restaurant);
@@ -206,7 +208,7 @@ public class RestaurantService {
 
     @Transactional
     public RestaurantResponse duplicateRestaurant(String id, String ownerId) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         RestaurantEntity original = restaurantRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Restaurant", id));
         OwnerEntity owner = ownerRepository.findById(ownerId)
@@ -291,7 +293,7 @@ public class RestaurantService {
 
     @Transactional
     public RestaurantResponse updateCommission(String id, Float commissionRate) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         RestaurantEntity restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Restaurant", id));
         restaurant.setCommissionRate(commissionRate.doubleValue());
@@ -386,9 +388,9 @@ public class RestaurantService {
         restaurant.setBankName(details.getBankName());
         restaurant.setAccountName(details.getAccountName());
         restaurant.setAccountCode(details.getAccountCode());
-        restaurant.setAccountNumber(details.getAccountNumber() != null ? String.valueOf(details.getAccountNumber()) : null);
-        restaurant.setBussinessRegNo(details.getBussinessRegNo() != null ? String.valueOf(details.getBussinessRegNo()) : null);
-        restaurant.setCompanyRegNo(details.getCompanyRegNo() != null ? String.valueOf(details.getCompanyRegNo()) : null);
+        restaurant.setAccountNumber(details.getAccountNumber());
+        restaurant.setBussinessRegNo(details.getBussinessRegNo());
+        restaurant.setCompanyRegNo(details.getCompanyRegNo());
         restaurant.setTaxRate(details.getTaxRate() != null ? details.getTaxRate().doubleValue() : null);
     }
 
@@ -586,18 +588,19 @@ public class RestaurantService {
         RestaurantEntity restaurant = restaurantRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException("Restaurant", storeId));
         if (restaurant.getCategories() == null) return List.of();
+
         List<Map<String, Object>> result = new ArrayList<>();
         for (var cat : restaurant.getCategories()) {
-            if (cat.getFoods() != null) {
-                for (var food : cat.getFoods()) {
-                    result.add(Map.of(
-                            "id", cat.getId(),
-                            "category_name", cat.getTitle(),
-                            "url", "/food/" + food.getId(),
-                            "food_id", food.getId()
-                    ));
-                }
-            }
+            var foods = cat.getFoods();
+            if (foods == null || foods.isEmpty()) continue; // skip empty categories, matches mobile's own filter
+
+            var firstFood = foods.get(0);
+            result.add(Map.of(
+                    "id", cat.getId(),
+                    "category_name", cat.getTitle(),
+                    "url",  imageUrlHelper.resolve(firstFood.getImage()),
+                    "food_id", firstFood.getId()
+            ));
         }
         return result;
     }
@@ -631,7 +634,7 @@ public class RestaurantService {
                         .id(food.getId())
                         .title(food.getTitle())
                         .description(food.getDescription())
-                        .image(food.getImage())
+                        .image(imageUrlHelper.resolve(food.getImage()))
                         .isActive(food.getIsActive())
                         .isOutOfStock(food.getIsOutOfStock())
                         .createdAt(food.getCreatedAt() != null ? food.getCreatedAt().toString() : null)

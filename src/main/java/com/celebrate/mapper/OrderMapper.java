@@ -2,27 +2,32 @@ package com.celebrate.mapper;
 
 import com.celebrate.dto.response.*;
 import com.celebrate.entity.*;
+import com.celebrate.utils.ImageUrlHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, RiderMapper.class, ZoneMapper.class, RestaurantMapper.class})
-public interface OrderMapper {
+public abstract class OrderMapper {
+
+    @Autowired
+    protected ImageUrlHelper imageUrlHelper;
 
     @Mapping(source = ".", target = "deliveryAddress", qualifiedByName = "toOrderAddress")
     @Mapping(source = ".", target = "chat", qualifiedByName = "toChat")
     @Mapping(source = "createdAt", target = "createdAt", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
     @Mapping(source = "updatedAt", target = "updatedAt", dateFormat = "yyyy-MM-dd'T'HH:mm:ss")
     @Mapping(source = "items", target = "items", qualifiedByName = "toItemList")
-    OrderResponse toResponse(OrderEntity entity);
+    public abstract OrderResponse toResponse(OrderEntity entity);
 
-    List<OrderResponse> toResponseList(List<OrderEntity> entities);
+    public abstract List<OrderResponse> toResponseList(List<OrderEntity> entities);
 
     @Named("toOrderAddress")
-    default OrderAddressResponse toOrderAddress(OrderEntity entity) {
+    public OrderAddressResponse toOrderAddress(OrderEntity entity) {
         return OrderAddressResponse.builder()
                 .deliveryAddress(entity.getDeliveryAddress())
                 .details(entity.getDeliveryDetails())
@@ -34,7 +39,7 @@ public interface OrderMapper {
     }
 
     @Named("toChat")
-    default ChatResponse toChat(OrderEntity entity) {
+    public ChatResponse toChat(OrderEntity entity) {
         if (entity.getChatMessage() == null) return null;
         return ChatResponse.builder()
                 .message(entity.getChatMessage())
@@ -44,7 +49,7 @@ public interface OrderMapper {
     }
 
     @Named("toItemList")
-    default List<OrderItemResponse> toItemList(List<OrderItemEntity> items) {
+    public List<OrderItemResponse> toItemList(List<OrderItemEntity> items) {
         if (items == null) return null;
         return items.stream().map(item -> {
             ItemVariationResponse var = null;
@@ -78,14 +83,16 @@ public interface OrderMapper {
                     .food(item.getFoodId())
                     .title(item.getTitle())
                     .description(item.getDescription())
-                    .image(item.getImage())
+                    .image(imageUrlHelper.resolve(item.getImage()))
                     .quantity(item.getQuantity())
                     .specialInstructions(item.getSpecialInstructions())
                     .cakeText(item.getCakeText())
-                    .cakeImageUrl(item.getCakeImageUrl())
+                    .cakeImageUrl(imageUrlHelper.resolve(item.getCakeImageUrl()))
                     .isActive(item.getIsActive())
                     .variation(var)
                     .addons(addons)
+                    .createdAt(item.getCreatedAt() != null ? item.getCreatedAt().toString() : null)
+                    .updatedAt(item.getUpdatedAt() != null ? item.getUpdatedAt().toString() : null)
                     .build();
         }).collect(Collectors.toList());
     }

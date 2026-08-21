@@ -7,8 +7,8 @@ public class BussinessDetailsInput {
     private String bankName;
     private String accountName;
     private String accountCode;
-    private Double accountNumber;
-    private Double bussinessRegNo;
-    private Double companyRegNo;
+    private String accountNumber;
+    private String bussinessRegNo;
+    private String companyRegNo;
     private Double taxRate;
 }

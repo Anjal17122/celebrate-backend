@@ -27,7 +27,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveEmailConfiguration(EmailConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setEmail(input.getEmail());
         config.setPassword(input.getPassword());
@@ -38,7 +38,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveFormEmailConfiguration(FormEmailConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setFormEmail(input.getFormEmail());
         return mapToResponse(configurationRepository.save(config));
@@ -46,7 +46,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveSendGridConfiguration(SendGridConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setSendGridApiKey(input.getSendGridApiKey());
         config.setSendGridEnabled(input.getSendGridEnabled());
@@ -58,7 +58,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveFirebaseConfiguration(FirebaseConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setFirebaseKey(input.getFirebaseKey());
         config.setAuthDomain(input.getAuthDomain());
@@ -73,7 +73,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveSentryConfiguration(SentryConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setDashboardSentryUrl(input.getDashboardSentryUrl());
         config.setWebSentryUrl(input.getWebSentryUrl());
@@ -86,7 +86,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveGoogleApiKeyConfiguration(GoogleApiKeyConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setGoogleApiKey(input.getGoogleApiKey());
         return mapToResponse(configurationRepository.save(config));
@@ -94,7 +94,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveCloudinaryConfiguration(CloudinaryConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setCloudinaryUploadUrl(input.getCloudinaryUploadUrl());
         config.setCloudinaryApiKey(input.getCloudinaryApiKey());
@@ -103,7 +103,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveAmplitudeApiKeyConfiguration(AmplitudeApiKeyConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setWebAmplitudeApiKey(input.getWebAmplitudeApiKey());
         config.setAppAmplitudeApiKey(input.getAppAmplitudeApiKey());
@@ -112,7 +112,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveGoogleClientIDConfiguration(GoogleClientIDConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setWebClientID(input.getWebClientID());
         config.setAndroidClientID(input.getAndroidClientID());
@@ -123,7 +123,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveWebConfiguration(WebConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setGoogleMapLibraries(input.getGoogleMapLibraries());
         config.setGoogleColor(input.getGoogleColor());
@@ -132,7 +132,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveAppConfigurations(AppConfigurationsInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setTermsAndConditions(input.getTermsAndConditions());
         config.setPrivacyPolicy(input.getPrivacyPolicy());
@@ -142,7 +142,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveDeliveryRateConfiguration(DeliveryCostConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         if (input != null) {
             if (input.getDeliveryRate() != null) config.setDeliveryRate(input.getDeliveryRate().doubleValue());
@@ -153,7 +153,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse savePaypalConfiguration(PaypalConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setClientId(input.getClientId());
         config.setClientSecret(input.getClientSecret());
@@ -163,7 +163,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveStripeConfiguration(StripeConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setPublishableKey(input.getPublishableKey());
         config.setSecretKey(input.getSecretKey());
@@ -172,7 +172,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveTwilioConfiguration(TwilioConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setTwilioAccountSid(input.getTwilioAccountSid());
         config.setTwilioAuthToken(input.getTwilioAuthToken());
@@ -184,7 +184,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveCurrencyConfiguration(CurrencyConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setCurrency(input.getCurrency());
         config.setCurrencySymbol(input.getCurrencySymbol());
@@ -193,7 +193,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveVerificationsToggle(VerificationConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setSkipEmailVerification(input.getSkipEmailVerification());
         config.setSkipMobileVerification(input.getSkipMobileVerification());
@@ -203,7 +203,7 @@ public class ConfigurationService {
 
     @Transactional
     public ConfigurationResponse saveDemoConfiguration(DemoConfigurationInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ConfigurationEntity config = getOrCreate();
         config.setEnableRiderDemo(input.getEnableRiderDemo());
         config.setEnableRestaurantDemo(input.getEnableRestaurantDemo());
@@ -213,7 +213,7 @@ public class ConfigurationService {
 
     @Transactional
     public boolean setVersions(AppTypeInput customerAppVersion, AppTypeInput riderAppVersion, AppTypeInput restaurantAppVersion) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         VersionsEntity versions = versionsRepository.findFirstBy()
                 .orElse(VersionsEntity.builder().build());
 

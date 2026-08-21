@@ -28,7 +28,7 @@ public class TippingService {
 
     @Transactional
     public TippingResponse createTipping(TippingInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         TippingEntity tipping = tippingRepository.findFirstBy()
                 .orElse(TippingEntity.builder().enabled(false).build());
 

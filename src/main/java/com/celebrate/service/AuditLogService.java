@@ -20,7 +20,7 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
 
     public Map<String, Object> getAuditLogs(Integer page, Integer limit) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         int pageNum = page != null ? Math.max(0, page - 1) : 0;
         int pageSize = limit != null ? limit : 20;
 

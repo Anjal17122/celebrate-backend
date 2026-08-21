@@ -2,6 +2,7 @@ package com.celebrate.controller;
 
 import com.celebrate.dto.input.*;
 import com.celebrate.dto.response.*;
+import com.celebrate.dto.response.CategoryWithFoodsResponse;
 import com.celebrate.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -20,6 +21,11 @@ public class CategoryController {
     @QueryMapping
     public List<CategoryResponse> categories() {
         return categoryService.getAllCategories();
+    }
+
+    @QueryMapping
+    public List<CategoryWithFoodsResponse> allCategoriesNearBy(@Argument Float latitude, @Argument Float longitude) {
+        return categoryService.getAllCategoriesNearBy(latitude, longitude);
     }
 
     @QueryMapping

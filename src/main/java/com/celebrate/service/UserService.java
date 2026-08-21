@@ -75,7 +75,7 @@ public class UserService {
 
     // Admin operations
     public List<UserResponse> getUsers(Integer page, Integer limit) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         int pageNum = page != null ? Math.max(0, page - 1) : 0;
         int pageSize = limit != null ? limit : 10;
         return userRepository.findAll(PageRequest.of(pageNum, pageSize))
@@ -83,13 +83,13 @@ public class UserService {
     }
 
     public UserResponse getUserById(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         return userMapper.toResponse(userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id)));
     }
 
     public Map<String, Object> getUsersPaginated(Integer page, Integer limit, String search) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         int pageNum = page != null ? Math.max(0, page - 1) : 0;
         int pageSize = limit != null ? limit : 10;
         Page<UserEntity> result = userRepository.findAllWithSearch(search, PageRequest.of(pageNum, pageSize));
@@ -103,7 +103,7 @@ public class UserService {
 
     @Transactional
     public UserResponse updateUserStatus(String id, String status, String reason) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
         user.setStatus(status);
@@ -113,7 +113,7 @@ public class UserService {
 
     @Transactional
     public UserResponse updateUserNotes(String id, String notes) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
         user.setNotes(notes);
@@ -122,7 +122,7 @@ public class UserService {
 
     @Transactional
     public UserResponse deleteUser(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User", id));
         userRepository.delete(user);
@@ -139,7 +139,7 @@ public class UserService {
 
     @Transactional
     public UserResponse resetUserSession(String userId) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User", userId));
         user.setNotificationToken(null);

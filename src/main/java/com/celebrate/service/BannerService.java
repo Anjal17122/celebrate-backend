@@ -7,6 +7,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.BannerMapper;
 import com.celebrate.repository.BannerRepository;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ public class BannerService {
 
     private final BannerRepository bannerRepository;
     private final BannerMapper bannerMapper;
+    private final ImageUrlHelper imageUrlHelper;
 
     public List<BannerResponse> getAllBanners() {
         return bannerRepository.findAll().stream().map(bannerMapper::toResponse).toList();
@@ -30,11 +32,11 @@ public class BannerService {
 
     @Transactional
     public BannerResponse createBanner(BannerInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         BannerEntity banner = BannerEntity.builder()
                 .title(input.getTitle())
                 .description(input.getDescription())
-                .file(input.getFile())
+                .file(imageUrlHelper.toRelativePath(input.getFile()))
                 .action(input.getAction())
                 .screen(input.getScreen())
                 .parameters(input.getParameters())
@@ -44,12 +46,12 @@ public class BannerService {
 
     @Transactional
     public BannerResponse editBanner(BannerInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         BannerEntity banner = bannerRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Banner", input.getId()));
         if (input.getTitle() != null) banner.setTitle(input.getTitle());
         if (input.getDescription() != null) banner.setDescription(input.getDescription());
-        if (input.getFile() != null) banner.setFile(input.getFile());
+        if (input.getFile() != null) banner.setFile(imageUrlHelper.toRelativePath(input.getFile()));
         if (input.getAction() != null) banner.setAction(input.getAction());
         if (input.getScreen() != null) banner.setScreen(input.getScreen());
         if (input.getParameters() != null) banner.setParameters(input.getParameters());
@@ -58,7 +60,7 @@ public class BannerService {
 
     @Transactional
     public String deleteBanner(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         BannerEntity banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Banner", id));
         bannerRepository.delete(banner);

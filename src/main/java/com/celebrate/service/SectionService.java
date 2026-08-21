@@ -30,7 +30,7 @@ public class SectionService {
 
     @Transactional
     public SectionResponse createSection(SectionInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         List<RestaurantEntity> restaurants = new ArrayList<>();
         if (input.getRestaurants() != null) {
             for (String rId : input.getRestaurants()) {
@@ -47,7 +47,7 @@ public class SectionService {
 
     @Transactional
     public SectionResponse editSection(SectionInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         SectionEntity section = sectionRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Section", input.getId()));
         if (input.getName() != null) section.setName(input.getName());
@@ -64,7 +64,7 @@ public class SectionService {
 
     @Transactional
     public boolean deleteSection(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         SectionEntity section = sectionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Section", id));
         sectionRepository.delete(section);

@@ -4,6 +4,7 @@ import com.celebrate.dto.response.*;
 import com.celebrate.entity.OpeningTimeEntity;
 import com.celebrate.entity.RestaurantEntity;
 import com.celebrate.entity.TimingEntity;
+import com.celebrate.utils.ImageUrlHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, OptionMapper.class, AddonMapper.class, ZoneMapper.class})
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class, OptionMapper.class, AddonMapper.class, ZoneMapper.class, ImageUrlHelper.class})
 public interface RestaurantMapper {
 
     @Mapping(source = ".", target = "location", qualifiedByName = "toPoint")
@@ -20,6 +21,8 @@ public interface RestaurantMapper {
     @Mapping(source = ".", target = "bussinessDetails", qualifiedByName = "toBussinessDetails")
     @Mapping(source = ".", target = "deliveryInfo", qualifiedByName = "toDeliveryInfo")
     @Mapping(source = "shopType.name", target = "shopType")
+    @Mapping(source = "image", target = "image", qualifiedByName = "resolveImageUrl")
+    @Mapping(source = "logo", target = "logo", qualifiedByName = "resolveImageUrl")
     RestaurantResponse toResponse(RestaurantEntity entity);
 
     @Mapping(source = "times", target = "times")
@@ -39,6 +42,7 @@ public interface RestaurantMapper {
 
     @Mapping(source = ".", target = "location", qualifiedByName = "toPoint")
     @Mapping(source = "shopType.name", target = "shopType")
+    @Mapping(source = "image", target = "image", qualifiedByName = "resolveImageUrl")
     RestaurantDetailResponse toDetailResponse(RestaurantEntity entity);
 
     List<RestaurantResponse> toResponseList(List<RestaurantEntity> entities);
@@ -59,6 +63,9 @@ public interface RestaurantMapper {
                 .bankName(entity.getBankName())
                 .accountName(entity.getAccountName())
                 .accountCode(entity.getAccountCode())
+                .accountNumber(entity.getAccountNumber())
+                .bussinessRegNo(entity.getBussinessRegNo())
+                .companyRegNo(entity.getCompanyRegNo())
                 .taxRate(entity.getTaxRate())
                 .build();
     }

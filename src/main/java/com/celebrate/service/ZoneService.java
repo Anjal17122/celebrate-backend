@@ -33,7 +33,7 @@ public class ZoneService {
 
     @Transactional
     public ZoneResponse createZone(ZoneInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
 
 
         ZoneEntity zone = ZoneEntity.builder()
@@ -48,7 +48,7 @@ public class ZoneService {
 
     @Transactional
     public ZoneResponse editZone(ZoneInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ZoneEntity zone = zoneRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Zone", input.getId()));
 
@@ -68,7 +68,7 @@ public class ZoneService {
 
     @Transactional
     public ZoneResponse deleteZone(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ZoneEntity zone = zoneRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Zone", id));
         zoneRepository.delete(zone);

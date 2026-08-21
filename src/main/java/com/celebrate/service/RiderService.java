@@ -7,6 +7,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.RiderMapper;
 import com.celebrate.repository.*;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,9 +26,10 @@ public class RiderService {
     private final RiderMapper riderMapper;
     private final PasswordEncoder passwordEncoder;
     private final SubscriptionPublisher subscriptionPublisher;
+    private final ImageUrlHelper imageUrlHelper;
 
     public List<RiderResponse> getAllRiders() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         return riderRepository.findAll().stream().map(riderMapper::toResponse).toList();
     }
 
@@ -46,7 +48,7 @@ public class RiderService {
 
     @Transactional
     public RiderResponse createRider(RiderInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         if (riderRepository.existsByUsername(input.getUsername())) {
             throw new ConflictException("A rider with this username already exists.");
         }
@@ -60,7 +62,7 @@ public class RiderService {
                 .username(input.getUsername())
                 .password(passwordEncoder.encode(input.getPassword()))
                 .phone(input.getPhone())
-                .image(input.getImage())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
                 .available(input.getAvailable() != null ? input.getAvailable() : true)
                 .vehicleType(input.getVehicleType())
                 .zone(zone)
@@ -86,7 +88,7 @@ public class RiderService {
         if (input.getName() != null) rider.setName(input.getName());
         if (input.getEmail() != null) rider.setEmail(input.getEmail());
         if (input.getPhone() != null) rider.setPhone(input.getPhone());
-        if (input.getImage() != null) rider.setImage(input.getImage());
+        if (input.getImage() != null) rider.setImage(imageUrlHelper.toRelativePath(input.getImage()));
         if (input.getAvailable() != null) rider.setAvailable(input.getAvailable());
         if (input.getVehicleType() != null) rider.setVehicleType(input.getVehicleType());
         if (input.getAccountNumber() != null) rider.setAccountNumber(input.getAccountNumber());
@@ -107,7 +109,7 @@ public class RiderService {
 
     @Transactional
     public RiderResponse deleteRider(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         RiderEntity rider = riderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rider", id));
         riderRepository.delete(rider);
@@ -207,22 +209,22 @@ public class RiderService {
         rider.setBankName(details.getBankName());
         rider.setAccountName(details.getAccountName());
         rider.setAccountCode(details.getAccountCode());
-        rider.setBussinessRegNo(details.getBussinessRegNo() != null ? String.valueOf(details.getBussinessRegNo()) : null);
-        rider.setCompanyRegNo(details.getCompanyRegNo() != null ? String.valueOf(details.getCompanyRegNo()) : null);
+        rider.setBussinessRegNo(details.getBussinessRegNo());
+        rider.setCompanyRegNo(details.getCompanyRegNo());
         rider.setTaxRate(details.getTaxRate() != null ? details.getTaxRate().doubleValue() : null);
-        if (details.getAccountNumber() != null) rider.setAccountNumber(String.valueOf(details.getAccountNumber()));
+        if (details.getAccountNumber() != null) rider.setAccountNumber(details.getAccountNumber());
     }
 
     private void applyLicenseDetails(RiderEntity rider, LicenseDetailsInput details) {
         if (details == null) return;
         rider.setLicenseNumber(details.getNumber());
         rider.setLicenseExpiryDate(details.getExpiryDate() != null ? details.getExpiryDate().toString() : null);
-        rider.setLicenseImage(details.getImage());
+        rider.setLicenseImage(imageUrlHelper.toRelativePath(details.getImage()));
     }
 
     private void applyVehicleDetails(RiderEntity rider, VehicleDetailsInput details) {
         if (details == null) return;
         rider.setVehicleNumber(details.getNumber());
-        rider.setVehicleImage(details.getImage());
+        rider.setVehicleImage(imageUrlHelper.toRelativePath(details.getImage()));
     }
 }

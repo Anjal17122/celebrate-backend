@@ -7,6 +7,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.ShopTypeMapper;
 import com.celebrate.repository.ShopTypeRepository;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ public class ShopTypeService {
 
     private final ShopTypeRepository shopTypeRepository;
     private final ShopTypeMapper shopTypeMapper;
+    private final ImageUrlHelper imageUrlHelper;
 
     public ShopTypeResponse fetchShopTypeByUnique(FetchUniqueShopTypeInput dto) {
         if (dto == null) return null;
@@ -71,10 +73,10 @@ public class ShopTypeService {
 
     @Transactional
     public ShopTypeResponse createShopType(CreateShopTypeInput dto) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ShopTypeEntity shopType = ShopTypeEntity.builder()
                 .name(dto.getName())
-                .image(dto.getImage())
+                .image(imageUrlHelper.toRelativePath(dto.getImage()))
                 .slug(dto.getName().toLowerCase().replaceAll("[^a-z0-9]+", "-"))
                 .isActive(true)
                 .build();
@@ -83,18 +85,18 @@ public class ShopTypeService {
 
     @Transactional
     public ShopTypeResponse updateShopType(UpdateShopTypeInput dto) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ShopTypeEntity shopType = shopTypeRepository.findById(dto.getId())
                 .orElseThrow(() -> new NotFoundException("ShopType", dto.getId()));
         if (dto.getName() != null) shopType.setName(dto.getName());
-        if (dto.getImage() != null) shopType.setImage(dto.getImage());
+        if (dto.getImage() != null) shopType.setImage(imageUrlHelper.toRelativePath(dto.getImage()));
         if (dto.getIsActive() != null) shopType.setIsActive(dto.getIsActive());
         return shopTypeMapper.toResponse(shopTypeRepository.save(shopType));
     }
 
     @Transactional
     public ShopTypeResponse deleteShopType(String id, String type) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         ShopTypeEntity shopType = shopTypeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("ShopType", id));
         if ("HARD".equals(type)) {

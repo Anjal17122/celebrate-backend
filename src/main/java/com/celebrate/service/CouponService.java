@@ -25,7 +25,7 @@ public class CouponService {
     private final CouponMapper couponMapper;
 
     public List<CouponResponse> getAllCoupons() {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         return couponRepository.findByRestaurantIsNull().stream().map(couponMapper::toResponse).toList();
     }
 
@@ -35,14 +35,14 @@ public class CouponService {
 
     @Transactional
     public CouponResponse createCoupon(CouponInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CouponEntity coupon = buildCoupon(input, null);
         return couponMapper.toResponse(couponRepository.save(coupon));
     }
 
     @Transactional
     public CouponResponse editCoupon(CouponInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CouponEntity coupon = couponRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Coupon", input.getId()));
         applyCouponUpdates(coupon, input);
@@ -51,7 +51,7 @@ public class CouponService {
 
     @Transactional
     public String deleteCoupon(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CouponEntity coupon = couponRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Coupon", id));
         couponRepository.delete(coupon);

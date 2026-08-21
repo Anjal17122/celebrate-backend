@@ -8,6 +8,7 @@ import com.celebrate.exception.*;
 import com.celebrate.mapper.CuisineMapper;
 import com.celebrate.repository.CuisineRepository;
 import com.celebrate.security.SecurityUtil;
+import com.celebrate.utils.ImageUrlHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ public class CuisineService {
 
     private final CuisineRepository cuisineRepository;
     private final CuisineMapper cuisineMapper;
+    private final ImageUrlHelper imageUrlHelper;
 
     public List<CuisineResponse> getAllCuisines() {
         return cuisineRepository.findAll().stream().map(cuisineMapper::toResponse).toList();
@@ -73,11 +75,11 @@ public class CuisineService {
 
     @Transactional
     public CuisineResponse createCuisine(CuisineInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CuisineEntity cuisine = CuisineEntity.builder()
                 .name(input.getName())
                 .description(input.getDescription())
-                .image(input.getImage())
+                .image(imageUrlHelper.toRelativePath(input.getImage()))
                 .shopType(input.getShopType())
                 .build();
         return cuisineMapper.toResponse(cuisineRepository.save(cuisine));
@@ -85,19 +87,19 @@ public class CuisineService {
 
     @Transactional
     public CuisineResponse editCuisine(CuisineInput input) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CuisineEntity cuisine = cuisineRepository.findById(input.getId())
                 .orElseThrow(() -> new NotFoundException("Cuisine", input.getId()));
         if (input.getName() != null) cuisine.setName(input.getName());
         if (input.getDescription() != null) cuisine.setDescription(input.getDescription());
-        if (input.getImage() != null) cuisine.setImage(input.getImage());
+        if (input.getImage() != null) cuisine.setImage(imageUrlHelper.toRelativePath(input.getImage()));
         if (input.getShopType() != null) cuisine.setShopType(input.getShopType());
         return cuisineMapper.toResponse(cuisineRepository.save(cuisine));
     }
 
     @Transactional
     public String deleteCuisine(String id) {
-        SecurityUtil.requireRole("ADMIN");
+        SecurityUtil.requireRole("ADMIN", "VENDOR");
         CuisineEntity cuisine = cuisineRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cuisine", id));
         cuisineRepository.delete(cuisine);

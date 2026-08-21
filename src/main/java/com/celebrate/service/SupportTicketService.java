@@ -27,7 +27,7 @@ public class SupportTicketService {
     private final SupportTicketMapper supportTicketMapper;
 
     public Map<String, Object> getAllSupportTickets(FiltersInput input) {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "VENDOR", "STAFF");
         int pageNum = input != null && input.getPage() != null ? Math.max(0, input.getPage() - 1) : 0;
         int pageSize = input != null && input.getLimit() != null ? input.getLimit() : 10;
         String search = input != null ? input.getSearch() : null;
@@ -115,7 +115,7 @@ public class SupportTicketService {
 
     @Transactional
     public SupportTicketResponse updateSupportTicketStatus(UpdateSupportTicketInput input) {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "STAFF");
         SupportTicketEntity ticket = supportTicketRepository.findById(input.getTicketId())
                 .orElseThrow(() -> new NotFoundException("Ticket", input.getTicketId()));
         ticket.setStatus(input.getStatus());
@@ -123,7 +123,7 @@ public class SupportTicketService {
     }
 
     public Map<String, Object> getTicketUsers(FiltersInput input) {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "STAFF");
         int pageNum = input != null && input.getPage() != null ? Math.max(0, input.getPage() - 1) : 0;
         int pageSize = input != null && input.getLimit() != null ? input.getLimit() : 10;
 
@@ -145,7 +145,7 @@ public class SupportTicketService {
     }
 
     public Map<String, Object> getTicketUsersWithLatest(FiltersInput input) {
-        SecurityUtil.requireRole("ADMIN", "STAFF");
+        SecurityUtil.requireRole("ADMIN", "VENDOR", "STAFF");
         int pageNum = input != null && input.getPage() != null ? Math.max(0, input.getPage() - 1) : 0;
         int pageSize = input != null && input.getLimit() != null ? input.getLimit() : 10;
 

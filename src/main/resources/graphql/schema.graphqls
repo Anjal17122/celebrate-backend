@@ -334,6 +334,7 @@ type Query {
   availableRiders: [Rider]
   getOrderStatuses: [String!]
   getPaymentStatuses: [String!]
+  getOrderAcceptTimes: [Int!]
   assignedOrders(id: String): [Order!]
   options: [Option!]
   addons: [Addon!]
@@ -395,6 +396,7 @@ type Query {
   fetchCategoryDetailsByStoreIdForMobile(storeId: String!): [CategoryDetailsResponseForMobile]
   popularItems(restaurantId: String!): [PopularItemsResponse!]!
   popularFoodItems(restaurantId: String!): [Food!]!
+  allCategoriesNearBy(latitude: Float, longitude: Float): [CategoryWithFoods!]!
   topRatedVendors(latitude: Float!, longitude: Float!): [Restaurant!]
   topRatedVendorsPreview(latitude: Float!, longitude: Float!): [RestaurantPreview!]
   lastOrderCreds: DemoCredentails
@@ -651,9 +653,9 @@ type BussinessDetails {
   bankName: String
   accountName: String
   accountCode: String
-  accountNumber: Float
-  bussinessRegNo: Float
-  companyRegNo: Float
+  accountNumber: String
+  bussinessRegNo: String
+  companyRegNo: String
   taxRate: Float
 }
 
@@ -1666,9 +1668,9 @@ input BussinessDetailsInput {
   bankName: String
   accountName: String
   accountCode: String
-  accountNumber: Float
-  bussinessRegNo: Float
-  companyRegNo: Float
+  accountNumber: String
+  bussinessRegNo: String
+  companyRegNo: String
   taxRate: Float
 }
 
@@ -2002,7 +2004,7 @@ type RestaurantDeliveryZoneInfoResponse {
   boundType: String!
   deliveryBounds: DeliveryBoundsResponse
   circleBounds: CircleBoundsResponse
-  location: CoordinatesResponse!
+  location: CoordinatesResponse
   address: String
   postCode: String
   city: String
@@ -2308,6 +2310,33 @@ input CuisineFilterInput {
   limit: Int
   shopType: String
   paginate: Boolean
+}
+
+type RestaurantBasic {
+  _id: ID
+  name: String
+  image: String
+  slug: String
+}
+
+type FoodWithRestaurant {
+  _id: ID
+  title: String
+  description: String
+  image: String
+  isActive: Boolean
+  isOutOfStock: Boolean
+  subCategory: String
+  subCategoryTitle: String
+  variations: [Variation]
+  restaurant: RestaurantBasic
+}
+
+type CategoryWithFoods {
+  _id: ID
+  title: String
+  image: String
+  foods: [FoodWithRestaurant]
 }
 
 type Subscription {
